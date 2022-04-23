@@ -1,0 +1,17 @@
+node_modules
+package-lock.json
+
+abi/
+
+
+cache
+artifacts
+
+.vscode
+deployments
+coverage
+coverage.json
+
+.env
+
+deployment/matic.json
