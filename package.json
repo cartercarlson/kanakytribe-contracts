@@ -17,7 +17,7 @@
         "deploy": "hardhat run scripts/deploy.ts --network matic",
         "generate": "ts-node scripts/generate-merkle-root.ts --input src/whitelist.json > src/proof.json",
         "verify": "ts-node scripts/verify-merkle-root.ts --input src/proof.json"
-},
+    },
     "dependencies": {
         "@openzeppelin/contracts": "^4.5.0"
     },
@@ -34,10 +34,12 @@
         "@types/mocha": "^9.1.0",
         "@types/node": "^17.0.10",
         "chai": "^4.3.4",
+        "commander": "^6.1.0",
         "decimal.js": "^10.3.1",
         "dotenv": "^14.2.0",
         "eth-sig-util": "^3.0.1",
         "ethereum-waffle": "^3.2.2",
+        "ethereumjs-util": "^7.1.4",
         "ethers": "^5.5.3",
         "fs": "^0.0.1-security",
         "hardhat": "^2.8.4",
