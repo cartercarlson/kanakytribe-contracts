@@ -52,7 +52,6 @@ const SHARES = [
     SOULESS_PCT,
     VICKY_PCT
 ];
-const BASEURI = "https://kanakytribe.mypinata.cloud/ipfs/QmcBKXTq6W8fNiGU2JociuFJ7fzjEaeLwbSS3ABgo6iKVm/";
 
 async function main() {
     let [deployer] = await ethers.getSigners();
@@ -61,7 +60,6 @@ async function main() {
     const kanakyTribe = await deploy<KanakyTribe>(
         "KanakyTribe",
         undefined,
-        BASEURI,
         MERKLEROOT,
         SHAREHOLDERS,
         SHARES
@@ -74,7 +72,7 @@ async function main() {
     await verifyContract(
         "KanakyTribe",
         kanakyTribe.address,
-        [BASEURI, MERKLEROOT, SHAREHOLDERS, SHARES]
+        [MERKLEROOT, SHAREHOLDERS, SHARES]
     );
 }
 

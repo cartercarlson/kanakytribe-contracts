@@ -15,6 +15,7 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
 
     bytes32 public merkleRoot;
     string private baseURI;
+    bool private revealed;
     
     uint256 public supplyLive;
     uint256 public supplyReserveMax = 100;
@@ -41,18 +42,22 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
     event SweepToken(address to, uint256 amount);
 
     constructor(
-        string memory baseURI_,
         bytes32 merkleRoot_,
         address[] memory shareholders_,
         uint256[] memory shares_
     ) ERC721 ("Kanaky Tribe", "KNKY") PaymentSplitter(shareholders_, shares_) {
-        baseURI = baseURI_;
         merkleRoot = merkleRoot_;
     }
 
     function setToken(address _token) external onlyOwner {
         require(token == address(0), "Already set");
         token = _token;
+    }
+
+    function setURI(string memory uri) external onlyOwner {
+        require(!revealed, "revealed");
+        revealed = true;
+        baseURI = uri;
     }
 
     function mintPrivate(
@@ -139,7 +144,9 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(tokenId != 0 && tokenId <= supplyLive, "invalid tokenId");
-        return string(abi.encodePacked(baseURI, tokenId.toString(), ".json"));
+        return !revealed 
+            ? "https://kanakytribe.mypinata.cloud/ipfs/QmXhrRxZpXsbMtNGpnvfTXTDhQ8eAirxpHZAFdmHytUZwJ/hidden.json"
+            : string(abi.encodePacked(baseURI, tokenId.toString(), ".json"));
     }
 
     function tokensClaimable(uint256 id) public view returns (uint256 earned) {
