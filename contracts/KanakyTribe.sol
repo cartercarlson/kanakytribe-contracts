@@ -22,7 +22,7 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
     uint256 public supplyLiveMax = 2001;
     address public immutable reserve = 0xA18050f3688Eb81eA134B04ed822126785aC9FE2;
 
-    uint256 startPrivate = 1650844800; // 2022.04.25 00:00 GMT
+    uint256 startPrivate = 1650913200; // 2022.04.25 17:00:00 GMT
     uint256 startPublic = startPrivate + 1 days;
     uint256 pricePrivate = 100 ether;
     uint256 pricePublic = 150 ether;
