@@ -30,7 +30,7 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
     uint256 mintMaxAmtPublic = 10;
     
     uint256 earnRate = 10 ether; // 10 erc20 tokens earned per day per nft
-    address token = address(0); // TODO
+    address token;
     // key: tokenId, value: timestamp of last token claim
     mapping(uint256 => uint256) private claimDate;
 
@@ -50,13 +50,9 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
         merkleRoot = merkleRoot_;
     }
 
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(tokenId != 0 && tokenId <= supplyLive, "invalid tokenId");
-        return string(abi.encodePacked(baseURI, tokenId.toString(), ".json"));
-    }
-
-    function _baseURI() internal view override returns (string memory) {
-        return baseURI;
+    function setToken(address _token) external onlyOwner {
+        require(token == address(0), "Already set");
+        token = _token;
     }
 
     function mintPrivate(
@@ -127,11 +123,6 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
         emit ClaimRewards(msg.sender, id, earned);
     }
 
-    function tokensClaimable(uint256 id) public view returns (uint256 earned) {
-        uint256 dayDelta = (block.timestamp - claimDate[id]) / 1 days;
-        earned = dayDelta * earnRate;
-    }
-
     function sweepToken(uint256 amount, address to, bool max) external onlyOwner {
         if (max) amount = IERC20(token).balanceOf(address(this));
         require(amount > 0, "Nothing to transfer");
@@ -145,4 +136,19 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
             claimDate[supplyLive] = block.timestamp;
         }
     }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(tokenId != 0 && tokenId <= supplyLive, "invalid tokenId");
+        return string(abi.encodePacked(baseURI, tokenId.toString(), ".json"));
+    }
+
+    function tokensClaimable(uint256 id) public view returns (uint256 earned) {
+        uint256 dayDelta = (block.timestamp - claimDate[id]) / 1 days;
+        earned = dayDelta * earnRate;
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
+    }
+
 }
