@@ -7,17 +7,19 @@ import { PaymentSplitter } from "@openzeppelin/contracts/finance/PaymentSplitter
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
+    using Strings for uint256;
 
-    bytes32 private merkleRoot;
+    bytes32 public merkleRoot;
     string private baseURI;
     
     uint256 public supplyLive;
     uint256 public supplyReserveMax = 100;
     uint256 public supplyReserveMinted;
-    uint256 public supplyLiveMax = 2003;
+    uint256 public supplyLiveMax = 2001;
     address public immutable reserve = 0xA18050f3688Eb81eA134B04ed822126785aC9FE2;
 
     uint256 startPrivate = 1650844800; // 2022.04.25 00:00 GMT
@@ -26,10 +28,6 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
     uint256 pricePublic = 150 ether;
     uint256 mintMaxAmtPrivate = 5;
     uint256 mintMaxAmtPublic = 10;
-    // key: user, value: amount
-    mapping(address => uint256) private amountMintedPrivate;
-    // key: user, value: amount
-    mapping(address => uint256) private amountMintedPublic;
     
     uint256 earnRate = 10 ether; // 10 erc20 tokens earned per day per nft
     address token = address(0); // TODO
@@ -52,7 +50,11 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
         merkleRoot = merkleRoot_;
     }
 
-    /// @dev See {ERC721-_baseURI}.
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(tokenId != 0 && tokenId <= supplyLive, "invalid tokenId");
+        return string(abi.encodePacked(baseURI, tokenId.toString(), ".json"));
+    }
+
     function _baseURI() internal view override returns (string memory) {
         return baseURI;
     }
@@ -62,9 +64,10 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
         bytes32[] calldata merkleProof,
         uint256 index
     ) external payable nonReentrant {
-        require(block.timestamp > startPrivate, "Too soon");
+        require(block.timestamp >= startPrivate, "Too soon");
+        require(block.timestamp <= startPublic, "Too late");
         require(amount > 0, "Amount cannot be 0");
-        require(amount + amountMintedPrivate[msg.sender] <= mintMaxAmtPrivate, "Cannot own > 5");
+        require(amount <= mintMaxAmtPrivate, "Cannot mint > 5");
         require(amount + supplyLive < supplyLiveMax, "Exceeds max supply");
         bytes32 node = keccak256(abi.encodePacked(index, msg.sender, amount));
         require(MerkleProof.verify(merkleProof, merkleRoot, node), "Invalid proof");
@@ -74,8 +77,6 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
         if (msg.value > mintCost) { // Refund
             Address.sendValue(payable(msg.sender), msg.value - mintCost);
         }
-
-        amountMintedPrivate[msg.sender] += amount;
 
         _mintAmountTo(amount, msg.sender);
         emit MintPrivate(msg.sender, amount);
@@ -87,7 +88,7 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
     ) external payable nonReentrant {
         require(block.timestamp > startPublic, "Too soon");
         require(amount > 0, "Amount cannot be 0");
-        require(amount +  amountMintedPublic[msg.sender] <= mintMaxAmtPublic, "Cannot own > 10");
+        require(amount <= mintMaxAmtPublic, "Cannot mint > 10");
         require(amount + supplyLive <= supplyLiveMax, "Exceeds max supply");
 
         uint256 mintCost = pricePublic * amount;
@@ -95,8 +96,6 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
         if (msg.value > mintCost) { // Refund
             Address.sendValue(payable(msg.sender), msg.value - mintCost);
         }
-
-        amountMintedPublic[msg.sender] += amount;
 
         _mintAmountTo(amount, msg.sender);
         emit MintPublic(msg.sender, amount);
