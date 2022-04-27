@@ -136,7 +136,7 @@ contract KanakyTribe is ERC721, PaymentSplitter, ReentrancyGuard, Ownable {
     }
 
     function _mintAmountTo(uint256 amount, address to) private {
-        for (uint256 i=0; i<= amount; i++) {
+        for (uint256 i=0; i< amount; i++) {
             _safeMint(to, ++supplyLive);
             claimDate[supplyLive] = block.timestamp;
         }
